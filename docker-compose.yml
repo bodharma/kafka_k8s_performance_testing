@@ -1,0 +1,54 @@
+version: '2.1'
+services:
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_HOST_NAME: "kafka"
+      KAFKA_LOG_DIRS: /kafka-logs
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    depends_on: ["zookeeper"]
+    restart: on-failure
+    ports:
+      - 9092:9092
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      JAVA_OPTS: -Xmx256m -Xms256m
+    ports:
+      - 2181:2181
+
+  producer-local:
+    build:
+      dockerfile: producer/Dockerfile
+      context: .
+    restart: on-failure
+    depends_on:
+      kafka:
+        condition: service_started
+    links:
+      - kafka:kafka
+    environment:
+      PYTHONPATH: ./opt
+
+  consumer-local:
+    build:
+      dockerfile: consumer/Dockerfile
+      context: .
+    restart: on-failure
+    depends_on:
+      kafka:
+        condition: service_started
+    links:
+      - kafka:kafka
+    environment:
+      PYTHONPATH: ./opt
+

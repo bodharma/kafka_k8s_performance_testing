@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: msg-simulator
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: msg-simulator
+  namespace: msg-simulator
+spec:
+  selector:
+    matchLabels:
+      app: msg-simulator
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: msg-simulator
+    spec:
+      containers:
+      - name: msg-simulator
+        image: "msg-simulator"
+        imagePullPolicy: Always
+        env:
+        - name: KAFKA_URL
+          value: "<KAFKA_IP>:9092"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: msg-consumer
+  namespace: msg-simulator
+spec:
+  selector:
+    matchLabels:
+      app: msg-consumer
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: msg-consumer
+    spec:
+      containers:
+      - name: msg-consumer
+        image: "msg-consumer"
+        imagePullPolicy: Always
+        env:
+        - name: KAFKA_URL
+          value: "<KAFKA_IP>:9092"
